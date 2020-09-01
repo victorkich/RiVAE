@@ -1,2 +1,2 @@
-# RiVAE
-Real to Imaginary Variational Auto-Encoder
+# RiAE
+Real to Imaginary Autoencoder
