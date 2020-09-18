@@ -4,13 +4,15 @@ import torch.optim as optim
 import torch.nn as nn
 from tqdm import tqdm
 import torch
+import os
 
-PATH = '~/data/images'
+local = os.getcwd()
+img_path = local+'/data/images'
 
 
 class AE(nn.Module):
     def __init__(self, **kwargs):
-        super(AE).__init__()
+        super().__init__()
         self.encoder_hidden_layer = nn.Linear(in_features=kwargs["input_shape"], out_features=128)
         self.encoder_output_layer = nn.Linear(in_features=128, out_features=128)
         self.decoder_hidden_layer = nn.Linear(in_features=128, out_features=128)
@@ -42,12 +44,11 @@ optimizer = optim.Adam(model.parameters(), lr=1e-3)
 # mean-squared error loss
 criterion = nn.MSELoss()
 
-data = RiaeDataset(PATH)
-
+data = RiaeDataset(img_path)
 lengths = [int(len(data)*0.8), int(len(data)*0.2)]
 train_dataset, test_dataset = torch.utils.data.random_split(data, lengths, generator=torch.Generator())
 
-train_loader = DataLoader(train_dataset, batch_size=128, shuffle=True, num_workers=4, pin_memory=True)
+train_loader = DataLoader(train_dataset, batch_size=64, shuffle=True, num_workers=4, pin_memory=True)
 test_loader = DataLoader(test_dataset, batch_size=32, shuffle=True, num_workers=4)
 
 epochs = 100
