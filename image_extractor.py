@@ -17,10 +17,7 @@ for rep in tqdm(listdir):
     while cap.isOpened():
         ret, frame = cap.read()
         if ret:
-            cv2.imwrite(images+'/green/{}.jpg'.format(count), frame[0])
-            cv2.imwrite(images+'/blue/{}.jpg'.format(count), frame[1])
-            cv2.imwrite(images+'/red/{}.jpg'.format(count), frame[2])
-
+            cv2.imwrite(images+'/{}.jpg'.format(count), frame)
             count += 1
         else:
             break
