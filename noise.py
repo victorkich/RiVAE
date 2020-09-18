@@ -7,7 +7,6 @@ def default(raw_img):
 
 
 def cartooning(raw_rgb):
-    raw_rgb = cv2.imread(raw_rgb)
     num_down_samples = 2
     num_bilateral_filters = 50
     img_color = raw_rgb
@@ -45,14 +44,12 @@ def s_and_p(raw_rgb):
     out = np.copy(raw_rgb)
     # Salt mode
     num_salt = np.ceil(amount * raw_rgb.size * s_vs_p)
-    coords = [np.random.randint(0, i - 1, int(num_salt))
-          for i in raw_rgb.shape]
-    out[coords] = 1
+    coords = [np.random.randint(0, i - 1, int(num_salt)) for i in raw_rgb.shape]
+    out[tuple(coords)] = 1
     # Pepper mode
     num_pepper = np.ceil(amount * raw_rgb.size * (1. - s_vs_p))
-    coords = [np.random.randint(0, i - 1, int(num_pepper))
-          for i in raw_rgb.shape]
-    out[coords] = 0
+    coords = [np.random.randint(0, i - 1, int(num_pepper)) for i in raw_rgb.shape]
+    out[tuple(coords)] = 0
     return out
 
 
