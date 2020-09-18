@@ -14,10 +14,11 @@ for dirname, _, filenames in os.walk(PATH):
 class RiaeDataset(Dataset):
     def __init__(self, img_dir, pytorch=True):
         super().__init__()
-
-        # Loop through the files in red folder and combine, into a dictionary, the other bands
         self.files = os.listdir(img_dir)
         self.pytorch = pytorch
+        self.noise_dict = {'default': noise.default, 'speckle': noise.speckle, 'gauss': noise.gauss,
+                           's_and_p': noise.s_and_p, 'poisson': noise.poisson, 'laplacian': noise.laplacian,
+                           'invert_colors': noise.invert_colors, 'cartooning': noise.cartooning}
 
     def __repr__(self):
         s = 'Dataset class with {} files'.format(self.__len__())
@@ -31,13 +32,13 @@ class RiaeDataset(Dataset):
         y = torch.tensor(self.open_mask(idx, add_dims=False), dtype=torch.torch.int64)
         return x, y
 
-    def open_as_array(self, idx, invert=False):
+    def open_as_array(self, idx, invert=False, noise_type='default'):
         raw_rgb = np.array(Image.open(self.files[idx]))
-
         if invert:
             raw_rgb = raw_rgb.transpose((2, 0, 1))
-        # Normalize
-        return raw_rgb / np.iinfo(raw_rgb.dtype).max
+
+        raw_rgb = self.noise_dict[noise_type](raw_rgb)
+        return raw_rgb / np.iinfo(raw_rgb.dtype).max  # Normalization
 
     def open_mask(self, idx, add_dims=False):
         raw_mask = np.array(Image.open(self.files[idx]))
