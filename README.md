@@ -1,8 +1,9 @@
-<h1 align="center">Real to Imaginary Variational Auto Encoder - RiAE</h1>
+<h1 align="center">RiVAE</h1>
+<h3 align="center">Real to Imaginary Variational Auto Encoder</h3>
 
 <p align="center"> 
-  <img src="https://img.shields.io/badge/PyTorch-v1.6.0-blue"/>
-  <img src="https://img.shields.io/badge/OpenCV-v4.4.0.42-blue"/>
+  <img src="https://img.shields.io/badge/PyTorch-v1.7.0-blue"/>
+  <img src="https://img.shields.io/badge/Torchvision-v0.8.1-blue"/>
   <img src="https://img.shields.io/badge/Pillow-v7.2.0-blue"/>
   <img src="https://img.shields.io/badge/Tqdm-v4.49.0-blue"/>
   <img src="https://img.shields.io/badge/Numpy-v1.19.2-blue"/>
@@ -11,7 +12,7 @@
 
 ## Objective
 <p align="justify"> 
-  <img src="media/riae_logo.png" alt="RiAE Logo" align="right" width="250">
+  <img src="media/riae_logo.png" alt="RiVAE Logo" align="right" width="250">
   <a>The goal of this project is to convert real and virtual images into a general imaginary image. It is the search for a medium between the real and the virtual from a visual interpretation of the environment. This project aims to assist in tasks of deep reinforcement learning by enabling a virtual training and at the same time an interpretation of reality.</a>  
 </p>
   
@@ -38,19 +39,19 @@ python3 image_extractor.py
 </p>
 
 ```shell
-python3 riae.py
+python3 rivae.py
 ```
 
 ## Structure
 <p align="justify"> 
-  The way RiAE works is somewhat simple... We extract the images from a virtual video, add 8 kinds of noises to them, then go through an auto encoder and calculate the error of the docoder output image with the ground truth image. Something very similar to a conventional denoising auto encoder, the difference here is in the focus of the project.
+  The way RiVAE works is somewhat simple. We extract the images from a virtual video, then go through an auto encoder and calculate the error of the docoder output image with the ground truth image to update the weights. Something very similar to a conventional variational auto encoder, the difference here is in the focus of the project.
 </p>
 
 <p align="center"> 
-  <img src="media/riae_diagram.png" alt="RiAE Diagram"/>
+  <img src="media/riae_diagram.png" alt="RiVAE Diagram"/>
 </p>  
 
 <p align="center"> 
   <i>If you liked this repository, please don't forget to starred it!</i>
-  <img src="https://img.shields.io/github/stars/victorkich/RiAE?style=social"/>
+  <img src="https://img.shields.io/github/stars/victorkich/RiVAE?style=social"/>
 </p>
