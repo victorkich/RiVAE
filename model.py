@@ -2,21 +2,24 @@ import torch.nn.functional as F
 import torch.nn as nn
 import torch
 
-features = 300
 
-
-# define a simple linear VAE
-class LinearVAE(nn.Module):
-    def __init__(self):
-        super(LinearVAE, self).__init__()
+class RiVAE(nn.Module):
+    def __init__(self, latent_dim, img_shape):
+        super(RiVAE, self).__init__()
+        self.latent_dim = latent_dim
+        self.img_shape = img_shape
+        linear_size = (img_shape[0]-4)*(img_shape[1]-4)*img_shape[2]
 
         # encoder
-        self.enc1 = nn.Linear(in_features=12000, out_features=6000)
-        self.enc2 = nn.Linear(in_features=6000, out_features=features * 2)
+        self.enc1 = nn.Conv2d(in_channels=3, out_channels=3, kernel_size=3)  # 18x10x3
+        self.enc2 = nn.Conv2d(in_channels=3, out_channels=3, kernel_size=3)  # 16x8x3
+        self.enc3 = nn.Flatten()
+        self.enc4 = nn.Linear(in_features=linear_size, out_features=latent_dim << 1)
 
         # decoder
-        self.dec1 = nn.Linear(in_features=features, out_features=6000)
-        self.dec2 = nn.Linear(in_features=6000, out_features=12000)
+        self.dec1 = nn.Linear(in_features=latent_dim, out_features=linear_size)  # 16x8x3
+        self.dec2 = nn.ConvTranspose2d(in_channels=3, out_channels=3, kernel_size=3)   # 18x10x3
+        self.dec3 = nn.ConvTranspose2d(in_channels=3, out_channels=3, kernel_size=3)
 
     def reparameterize(self, mu, log_var):
         """
@@ -31,7 +34,9 @@ class LinearVAE(nn.Module):
     def forward(self, x):
         # encoding
         x = F.relu(self.enc1(x))
-        x = self.enc2(x).view(-1, 2, features)
+        x = F.relu(self.enc2(x))
+        x = self.enc3(x)
+        x = self.enc4(x).view(-1, 2, self.latent_dim)
         # get `mu` and `log_var`
         mu = x[:, 0, :]  # the first feature values as mean
         log_var = x[:, 1, :]  # the other feature values as variance
@@ -40,5 +45,7 @@ class LinearVAE(nn.Module):
 
         # decoding
         x = F.relu(self.dec1(z))
-        reconstruction = torch.sigmoid(self.dec2(x))
+        x = x.reshape((1, self.img_shape[2], self.img_shape[0]-4, self.img_shape[1]-4))
+        x = F.relu(self.dec2(x))
+        reconstruction = self.dec3(x)
         return reconstruction, mu, log_var

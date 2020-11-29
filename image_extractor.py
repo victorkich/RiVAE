@@ -2,9 +2,9 @@ from tqdm import tqdm
 import cv2
 import os
 
-local = os.getcwd()
-images = local+'/data/images'
-videos = local+'/data/videos'
+path = os.path.abspath(os.path.dirname(__file__))
+images = f"{path}/data/images"
+videos = f"{path}/data/videos"
 listdir = os.listdir(videos)
 
 count = 0
