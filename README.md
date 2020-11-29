@@ -1,4 +1,4 @@
-<h1 align="center">Real to Imaginary Auto Encoder - RiAE</h1>
+<h1 align="center">Real to Imaginary Variational Auto Encoder - RiAE</h1>
 
 <p align="center"> 
   <img src="https://img.shields.io/badge/PyTorch-v1.6.0-blue"/>
