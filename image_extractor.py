@@ -7,7 +7,10 @@ images = f"{path}/data/images"
 videos = f"{path}/data/videos"
 listdir = os.listdir(videos)
 
-count = 0
+# parameter
+interval = 10
+
+count = 1
 for rep in tqdm(listdir):
     cap = cv2.VideoCapture(videos+'/'+rep)
 
@@ -17,7 +20,8 @@ for rep in tqdm(listdir):
     while cap.isOpened():
         ret, frame = cap.read()
         if ret:
-            cv2.imwrite(images+'/{}.jpg'.format(count), frame)
+            if not count % interval:
+                cv2.imwrite(f"{images}/{int(count/interval)}.jpg", frame)
             count += 1
         else:
             break

@@ -6,11 +6,10 @@ import os
 
 
 class RiVAEDataset(Dataset):
-    def __init__(self, img_dir, img_shape, pytorch=False):
+    def __init__(self, img_dir, img_shape):
         super().__init__()
         self.img_dir = f"{img_dir}/"
         self.files = os.listdir(img_dir)
-        self.pytorch = pytorch
 
         self.trans = transforms.Compose([
             transforms.ToTensor(),
@@ -25,15 +24,14 @@ class RiVAEDataset(Dataset):
         return len(self.files)
 
     def __getitem__(self, idx):
-        x = y = self.trans(self.open_as_pil(idx))
-        return x, y
+        #x = self.trans(self.open_as_pil(idx))
+        x = Image.open(self.img_dir+self.files[idx])
+        return x
 
-    def open_as_array(self, idx, invert=False, add_dims=False):
+    def open_as_array(self, idx):
         raw_rgb = np.array(Image.open(self.img_dir+self.files[idx]))
-        if invert:
-            raw_rgb = raw_rgb.transpose((2, 0, 1))
-        return np.expand_dims(raw_rgb, 0)/255 if add_dims else raw_rgb/255
+        return raw_rgb/255
 
     def open_as_pil(self, idx):
-        arr = 256 * self.open_as_array(idx, invert=self.pytorch)
+        arr = 255 * self.open_as_array(idx)
         return Image.fromarray(arr.astype(np.uint8), 'RGB')

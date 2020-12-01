@@ -1,25 +1,59 @@
-import torch.nn.functional as F
 import torch.nn as nn
 import torch
+import cv2
+
+
+class View(nn.Module):
+    def __init__(self, shape):
+        super().__init__()
+        self.shape = shape
+
+    def forward(self, x):
+        return x.view(*self.shape)
+
+
+class PrintShape(nn.Module):
+    def forward(self, x):
+        print(x.shape)
+        return x
 
 
 class RiVAE(nn.Module):
-    def __init__(self, latent_dim, img_shape):
+    def __init__(self, latent_dim, batch_size, img_shape):
         super(RiVAE, self).__init__()
-        self.latent_dim = latent_dim
-        self.img_shape = img_shape
-        linear_size = (img_shape[0]-4)*(img_shape[1]-4)*img_shape[2]
+
+        '''
+        Output = ((I - K + 2P) / S + 1)
+        I - a size of input neuron
+        K - kernel size
+        P - padding
+        S - stride
+        '''
 
         # encoder
-        self.enc1 = nn.Conv2d(in_channels=3, out_channels=3, kernel_size=3)  # 18x10x3
-        self.enc2 = nn.Conv2d(in_channels=3, out_channels=3, kernel_size=3)  # 16x8x3
-        self.enc3 = nn.Flatten()
-        self.enc4 = nn.Linear(in_features=linear_size, out_features=latent_dim << 1)
+        self.encoder = nn.Sequential(
+            nn.Conv2d(3, 24, kernel_size=3, stride=3, padding=1),
+            nn.LeakyReLU(0.2, inplace=True),
+            nn.MaxPool2d(2, stride=2),
+            nn.Conv2d(24, 12, kernel_size=3, stride=2, padding=1),
+            nn.LeakyReLU(0.2, inplace=True),
+            nn.MaxPool2d(2, stride=1),
+            nn.Flatten(),
+            nn.Linear(in_features=6348, out_features=latent_dim << 1),
+            View((-1, 2, latent_dim))
+        )
 
         # decoder
-        self.dec1 = nn.Linear(in_features=latent_dim, out_features=linear_size)  # 16x8x3
-        self.dec2 = nn.ConvTranspose2d(in_channels=3, out_channels=3, kernel_size=3)   # 18x10x3
-        self.dec3 = nn.ConvTranspose2d(in_channels=3, out_channels=3, kernel_size=3)
+        self.decoder = nn.Sequential(
+            nn.Linear(in_features=latent_dim, out_features=6348),
+            nn.ReLU(inplace=True),
+            View((batch_size, 12, 23, 23)),
+            nn.ConvTranspose2d(12, 24, kernel_size=3, stride=2),
+            nn.ReLU(inplace=True),
+            nn.ConvTranspose2d(24, 12, kernel_size=5, stride=3, padding=1),
+            nn.ReLU(inplace=True),
+            nn.ConvTranspose2d(12, 3, kernel_size=2, stride=2, padding=1)
+        )
 
     def reparameterize(self, mu, log_var):
         """
@@ -27,25 +61,21 @@ class RiVAE(nn.Module):
         :param log_var: log variance from the encoder's latent space
         """
         std = torch.exp(0.5 * log_var)  # standard deviation
-        eps = torch.randn_like(std)  # `randn_like` as we need the same size
+        eps = torch.randn_like(std)  # randn_like as we need the same size
         sample = mu + (eps * std)  # sampling as if coming from the input space
         return sample
 
     def forward(self, x):
         # encoding
-        x = F.relu(self.enc1(x))
-        x = F.relu(self.enc2(x))
-        x = self.enc3(x)
-        x = self.enc4(x).view(-1, 2, self.latent_dim)
+        x = self.encoder(x)
+
         # get `mu` and `log_var`
-        mu = x[:, 0, :]  # the first feature values as mean
-        log_var = x[:, 1, :]  # the other feature values as variance
-        # get the latent vector through reparameterization
+        mu = x[:, 0, :]
+        log_var = x[:, 1, :]
+
+        # get the latent vector through re-parameterization
         z = self.reparameterize(mu, log_var)
 
         # decoding
-        x = F.relu(self.dec1(z))
-        x = x.reshape((1, self.img_shape[2], self.img_shape[0]-4, self.img_shape[1]-4))
-        x = F.relu(self.dec2(x))
-        reconstruction = self.dec3(x)
+        reconstruction = self.decoder(z)
         return reconstruction, mu, log_var

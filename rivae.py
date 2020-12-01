@@ -13,11 +13,11 @@ path = os.path.abspath(os.path.dirname(__file__))
 img_path = f"{path}/data/images"
 
 # parameters
-img_shape = [72, 106, 3]  # [h, w, c]
-latent_dim = 512
+img_shape = [280, 280, 3]  # [h, w, c]
+latent_dim = 1587
 epochs = 1000
 batch_size = 1
-lr = 0.001
+lr = 0.0001
 
 #  use gpu if available
 cuda_available = torch.cuda.is_available()
@@ -26,7 +26,7 @@ print("PyTorch CUDA:", cuda_available)
 
 # create a model from LinearVAE autoencoder class
 # load it to the specified device, either gpu or cpu
-model = model.RiVAE(latent_dim=latent_dim, img_shape=img_shape).to(device)
+model = model.RiVAE(latent_dim=latent_dim, batch_size=batch_size, img_shape=img_shape).to(device)
 
 # create an optimizer object
 # Adam optimizer with learning rate 1e-4
@@ -35,10 +35,10 @@ optimizer = optim.Adam(model.parameters(), lr=lr)
 # Mean Square Error loss
 criterion = nn.MSELoss()
 
-dataset = RiVAEDataset(img_dir=img_path, img_shape=img_shape, pytorch=False)
-lengths = [int(len(dataset)*0.8), int(len(dataset)*0.2)]
+# loading the dataset using DataLoader
+dataset = RiVAEDataset(img_dir=img_path, img_shape=img_shape)
+lengths = [round(len(dataset)*0.8), round(len(dataset)*0.2)]
 train_data, val_data = random_split(dataset, lengths, generator=torch.Generator())
-
 train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=True)
 val_loader = DataLoader(val_data, batch_size=batch_size, shuffle=True)
 
@@ -61,12 +61,12 @@ def fit(model, dataloader):
     model.train()
     running_loss = 0.0
     for i, data in tqdm(enumerate(dataloader), total=int(len(train_data)/dataloader.batch_size)):
-        data, _ = data
         data = data.to(device)
+        data = data.reshape((1, 3, data.shape[3], data.shape[2]))
         optimizer.zero_grad()
         reconstruction, mu, logvar = model(data)
-        bce_loss = criterion(reconstruction, data)
-        loss = final_loss(bce_loss, mu, logvar)
+        criterion_loss = criterion(reconstruction, data)
+        loss = final_loss(criterion_loss, mu, logvar)
         running_loss += loss.item()
         loss.backward()
         optimizer.step()
@@ -79,11 +79,11 @@ def validate(model, dataloader):
     running_loss = 0.0
     with torch.no_grad():
         for i, data in tqdm(enumerate(dataloader), total=int(len(val_data) / dataloader.batch_size)):
-            data, _ = data
             data = data.to(device)
+            data = data.view((1, 3, data.shape[3], data.shape[2]))
             reconstruction, mu, logvar = model(data)
-            bce_loss = criterion(reconstruction, data)
-            loss = final_loss(bce_loss, mu, logvar)
+            criterion_loss = criterion(reconstruction, data)
+            loss = final_loss(criterion_loss, mu, logvar)
             running_loss += loss.item()
 
             # save the last batch input and output of every epoch
