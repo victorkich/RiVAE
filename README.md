@@ -15,7 +15,7 @@
 
 ## Objective
 <p align="justify"> 
-  <img src="media/riae_logo.png" alt="RiVAE Logo" align="right" width="250">
+  <img src="media/rivae_logo.png" alt="RiVAE Logo" align="right" width="250">
   <a>The goal of this project is to convert real and virtual images into a general imaginary image. It is the search for a medium between the real and the virtual from a visual interpretation of the environment. This project aims to assist in tasks of deep reinforcement learning by enabling a virtual training and at the same time an interpretation of reality.</a>  
 </p>
   
@@ -51,7 +51,7 @@ python3 rivae.py
 </p>
 
 <p align="center"> 
-  <img src="media/riae_diagram.png" alt="RiVAE Diagram"/>
+  <img src="media/rivae_diagram.png" alt="RiVAE Diagram"/>
 </p>  
 
 <p align="center"> 
