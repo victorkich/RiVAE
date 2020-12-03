@@ -4,6 +4,7 @@ from dataset_creator import RiVAEDataset
 from torch import optim
 from torch import nn
 from tqdm import tqdm
+import pandas as pd
 import torch
 import model
 import os
@@ -32,8 +33,7 @@ model = model.RiVAE(latent_dim=latent_dim, batch_size=batch_size, img_shape=img_
 # Adam optimizer with learning rate 1e-4
 optimizer = optim.Adam(model.parameters(), lr=lr)
 
-# Mean Square Error loss
-#criterion = nn.MSELoss()
+# Binary Cross Entropy loss
 criterion = nn.BCELoss(reduction='sum')
 
 # loading the dataset using DataLoader
@@ -46,12 +46,9 @@ val_loader = DataLoader(val_data, batch_size=batch_size, shuffle=True)
 
 def kl_loss(mu, logvar):
     """
-    This function will add the reconstruction loss (BCELoss) and the
-    KL-Divergence.
-    KL-Divergence = 0.5 * sum(1 + log(sigma^2) - mu^2 - sigma^2)
-    :param bce_loss: recontruction loss
-    :param mu: the mean from the latent vector
-    :param logvar: log variance from the latent vector
+        KL-Divergence = 0.5 * sum(1 + log(sigma^2) - mu^2 - sigma^2)
+        :param mu: the mean from the latent vector
+        :param logvar: log variance from the latent vector
     """
     KLD = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
     return KLD
@@ -105,5 +102,8 @@ for epoch in range(epochs):
     val_epoch_loss = validate(model, val_loader)
     train_loss.append(train_epoch_loss)
     val_loss.append(val_epoch_loss)
+    df_loss = pd.DataFrame({'train_loss': train_loss, 'val_loss': val_loss})
+    df_loss.to_csv('output.csv')
     print(f"Train Loss: {train_epoch_loss:.4f}")
     print(f"Val Loss: {val_epoch_loss:.4f}")
+    torch.save(model.state_dict(), f"{path}/models/model_{epoch}.pth")

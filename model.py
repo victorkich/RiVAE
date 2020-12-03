@@ -1,6 +1,5 @@
 import torch.nn as nn
 import torch
-import cv2
 
 
 class View(nn.Module):

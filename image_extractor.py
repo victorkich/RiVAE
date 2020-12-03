@@ -8,7 +8,7 @@ videos = f"{path}/data/videos"
 listdir = os.listdir(videos)
 
 # parameter
-interval = 10
+interval = 2
 
 count = 1
 for rep in tqdm(listdir):
