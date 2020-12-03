@@ -8,7 +8,7 @@
   <img src="https://img.shields.io/badge/Pillow-v7.2.0-blue"/>
   <img src="https://img.shields.io/badge/Matplotlib-v3.3.3-blue"/>
   <img src="https://img.shields.io/badge/Tqdm-v4.49.0-blue"/>
-  <img src="https://img.shields.io/badge/Numpy-v1.1.4-blue"/>
+  <img src="https://img.shields.io/badge/Pandas-v1.1.4-blue"/>
   <img src="https://img.shields.io/badge/Numpy-v1.19.2-blue"/>
 </p>
 <br/>
