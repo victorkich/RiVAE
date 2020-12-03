@@ -24,8 +24,7 @@ class RiVAEDataset(Dataset):
         return len(self.files)
 
     def __getitem__(self, idx):
-        #x = self.trans(self.open_as_pil(idx))
-        x = Image.open(self.img_dir+self.files[idx])
+        x = self.trans(self.open_as_pil(idx))
         return x
 
     def open_as_array(self, idx):

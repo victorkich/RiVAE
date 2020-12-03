@@ -40,6 +40,7 @@ class RiVAE(nn.Module):
             nn.MaxPool2d(2, stride=1),
             nn.Flatten(),
             nn.Linear(in_features=6348, out_features=latent_dim << 1),
+            nn.Sigmoid(),
             View((-1, 2, latent_dim))
         )
 
@@ -52,7 +53,8 @@ class RiVAE(nn.Module):
             nn.ReLU(inplace=True),
             nn.ConvTranspose2d(24, 12, kernel_size=5, stride=3, padding=1),
             nn.ReLU(inplace=True),
-            nn.ConvTranspose2d(12, 3, kernel_size=2, stride=2, padding=1)
+            nn.ConvTranspose2d(12, 3, kernel_size=2, stride=2, padding=1),
+            nn.Sigmoid()
         )
 
     def reparameterize(self, mu, log_var):

@@ -33,7 +33,8 @@ model = model.RiVAE(latent_dim=latent_dim, batch_size=batch_size, img_shape=img_
 optimizer = optim.Adam(model.parameters(), lr=lr)
 
 # Mean Square Error loss
-criterion = nn.MSELoss()
+#criterion = nn.MSELoss()
+criterion = nn.BCELoss(reduction='sum')
 
 # loading the dataset using DataLoader
 dataset = RiVAEDataset(img_dir=img_path, img_shape=img_shape)
@@ -43,7 +44,7 @@ train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=True)
 val_loader = DataLoader(val_data, batch_size=batch_size, shuffle=True)
 
 
-def final_loss(bce_loss, mu, logvar):
+def kl_loss(mu, logvar):
     """
     This function will add the reconstruction loss (BCELoss) and the
     KL-Divergence.
@@ -52,9 +53,8 @@ def final_loss(bce_loss, mu, logvar):
     :param mu: the mean from the latent vector
     :param logvar: log variance from the latent vector
     """
-    BCE = bce_loss
     KLD = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
-    return BCE + KLD
+    return KLD
 
 
 def fit(model, dataloader):
@@ -66,7 +66,8 @@ def fit(model, dataloader):
         optimizer.zero_grad()
         reconstruction, mu, logvar = model(data)
         criterion_loss = criterion(reconstruction, data)
-        loss = final_loss(criterion_loss, mu, logvar)
+        kl_div = kl_loss(mu, logvar)
+        loss = criterion_loss + kl_div
         running_loss += loss.item()
         loss.backward()
         optimizer.step()
@@ -83,7 +84,8 @@ def validate(model, dataloader):
             data = data.view((1, 3, data.shape[3], data.shape[2]))
             reconstruction, mu, logvar = model(data)
             criterion_loss = criterion(reconstruction, data)
-            loss = final_loss(criterion_loss, mu, logvar)
+            kl_div = kl_loss(mu, logvar)
+            loss = criterion_loss + kl_div
             running_loss += loss.item()
 
             # save the last batch input and output of every epoch
