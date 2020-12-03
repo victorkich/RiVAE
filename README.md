@@ -47,7 +47,7 @@ python3 rivae.py
 
 ## Structure
 <p align="justify"> 
-  The way RiVAE works is somewhat simple. We extract the images from a virtual video, then go through an auto encoder and calculate the error of the docoder output image with the ground truth image to update the weights. Something very similar to a conventional variational auto encoder, the difference here is in the focus of the project.
+  The way RiVAE works is somewhat simple. We extract the images from a virtual video, then go through an auto encoder and calculate the error of the decoder output image with the ground truth image to update the weights. Something very similar to a conventional variational auto encoder, the difference here is in the focus of the project.
 </p>
 
 <p align="center"> 
