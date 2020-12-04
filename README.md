@@ -38,7 +38,7 @@ python3 image_extractor.py
 ```
 
 <p align="justify"> 
- <a>With the extracted images, now we can train our RiAE network, to do this just run the following code:</a>
+ <a>With the extracted images, now we can train our RiVAE network, to do this just run the following code:</a>
 </p>
 
 ```shell
