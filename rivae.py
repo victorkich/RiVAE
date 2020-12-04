@@ -19,6 +19,7 @@ latent_dim = 1587
 epochs = 1000
 batch_size = 1
 lr = 0.0001
+checkpoint_interval = 10
 
 #  use gpu if available
 cuda_available = torch.cuda.is_available()
@@ -96,7 +97,7 @@ def validate(model, dataloader):
 
 train_loss = []
 val_loss = []
-for epoch in range(epochs):
+for epoch in range(1, epochs+1):
     print(f"Epoch {epoch+1} of {epochs}")
     train_epoch_loss = fit(model, train_loader)
     val_epoch_loss = validate(model, val_loader)
@@ -106,4 +107,5 @@ for epoch in range(epochs):
     df_loss.to_csv('output.csv')
     print(f"Train Loss: {train_epoch_loss:.4f}")
     print(f"Val Loss: {val_epoch_loss:.4f}")
-    torch.save(model.state_dict(), f"{path}/models/model_{epoch}.pth")
+    if not epoch % checkpoint_interval:
+        torch.save(model.state_dict(), f"{path}/models/model_{epoch}.pth")
