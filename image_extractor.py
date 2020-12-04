@@ -1,5 +1,5 @@
+from cv2 import VideoCapture, imwrite
 from tqdm import tqdm
-import cv2
 import os
 
 path = os.path.abspath(os.path.dirname(__file__))
@@ -10,19 +10,28 @@ listdir = os.listdir(videos)
 # parameter
 interval = 2
 
-count = 1
-for rep in tqdm(listdir):
-    cap = cv2.VideoCapture(videos+'/'+rep)
+for rep in listdir:
+    cap = VideoCapture(videos+'/'+rep)
 
     if not cap.isOpened():
         print("Error opening video stream or file")
+        continue
 
+    print(f"Calculating the number of frames from video {rep}")
+    frames = 0
     while cap.isOpened():
+        ret, _ = cap.read()
+        if ret:
+            frames += 1
+        else:
+            break
+
+    print(f"Extracting frames from video {rep}")
+    cap = VideoCapture(videos+'/'+rep)
+    for i in tqdm(range(0, frames, interval)):
         ret, frame = cap.read()
         if ret:
-            if not count % interval:
-                cv2.imwrite(f"{images}/{int(count/interval)}.jpg", frame)
-            count += 1
+            imwrite(f"{images}/{int(i/interval)}.jpg", frame)
         else:
             break
 
