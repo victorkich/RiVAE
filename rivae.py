@@ -26,9 +26,9 @@ cuda_available = torch.cuda.is_available()
 device = torch.device('cuda' if cuda_available else 'cpu')
 print("PyTorch CUDA:", cuda_available)
 
-# create a model from LinearVAE autoencoder class
+# create a model from RiVAE auto encoder class
 # load it to the specified device, either gpu or cpu
-model = model.RiVAE(latent_dim=latent_dim, batch_size=batch_size, img_shape=img_shape).to(device)
+model = model.RiVAE(latent_dim=latent_dim, batch_size=batch_size).to(device)
 
 # create an optimizer object
 # Adam optimizer with learning rate 1e-4

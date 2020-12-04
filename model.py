@@ -18,7 +18,7 @@ class PrintShape(nn.Module):
 
 
 class RiVAE(nn.Module):
-    def __init__(self, latent_dim, batch_size, img_shape):
+    def __init__(self, latent_dim, batch_size=1):
         super(RiVAE, self).__init__()
 
         '''
@@ -39,7 +39,7 @@ class RiVAE(nn.Module):
             nn.MaxPool2d(2, stride=1),
             nn.Flatten(),
             nn.Linear(in_features=6348, out_features=latent_dim << 1),
-            nn.Sigmoid(),
+            nn.LeakyReLU(0.2, inplace=True),  # nn.Sigmoid(),
             View((-1, 2, latent_dim))
         )
 
