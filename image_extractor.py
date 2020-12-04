@@ -17,18 +17,8 @@ for rep in listdir:
         print("Error opening video stream or file")
         continue
 
-    print(f"Calculating the number of frames from video {rep}")
-    frames = 0
-    while cap.isOpened():
-        ret, _ = cap.read()
-        if ret:
-            frames += 1
-        else:
-            break
-
     print(f"Extracting frames from video {rep}")
-    cap = VideoCapture(videos+'/'+rep)
-    for i in tqdm(range(0, frames, interval)):
+    for i in tqdm(range(0, cap.get(7), interval)):
         ret, frame = cap.read()
         if ret:
             imwrite(f"{images}/{int(i/interval)}.jpg", frame)
