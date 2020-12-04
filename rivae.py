@@ -98,7 +98,7 @@ def validate(model, dataloader):
 train_loss = []
 val_loss = []
 for epoch in range(1, epochs+1):
-    print(f"Epoch {epoch+1} of {epochs}")
+    print(f"Epoch {epoch} of {epochs}")
     train_epoch_loss = fit(model, train_loader)
     val_epoch_loss = validate(model, val_loader)
     train_loss.append(train_epoch_loss)
