@@ -1,10 +1,17 @@
-from cv2 import VideoCapture, VideoWriter, VideoWriter_fourcc, hconcat
 from torch import load, cuda, device
 from argparse import ArgumentParser
-from numpy import zeros
+from torchvision import transforms
 from tqdm import tqdm
+from PIL import Image
+import numpy as np
 import model
+import cv2
 import os
+
+
+# Parameters
+latent_dim = 1587
+img_shape = [280, 280, 3]
 
 path = os.path.abspath(os.path.dirname(__file__))
 
@@ -14,14 +21,14 @@ ap = ArgumentParser()
 # Add the arguments to the parser
 ap.add_argument("--video", required=True, help="video for test the model")
 ap.add_argument("--model", required=True, help="model used in the test")
-ap.add_argument("--latent_dim", required=True, help="latent dimension of the model")
+ap.add_argument("--output", required=True, help="name for output video")
 args = vars(ap.parse_args())
 
 path_video = f"{path}/data/videos/{args['video']}"
 path_model = f"{path}/models/{args['model']}"
 
 # Create a VideoCapture object
-cap = VideoCapture(path_video)
+cap = cv2.VideoCapture(path_video)
 
 # Use gpu if available
 cuda_available = cuda.is_available()
@@ -29,21 +36,35 @@ device = device('cuda' if cuda_available else 'cpu')
 print("PyTorch CUDA:", cuda_available)
 
 # Load model
-model = model.RiVAE(latent_dim=int(args['latent_dim'])).to(device)
+model = model.RiVAE(latent_dim=latent_dim).to(device)
 model.load_state_dict(load(path_model))
 model.eval()
 
 # Define the codec and create VideoWriter object.The output is stored in 'test_model.mp4' file.
-out = VideoWriter('test_model.mp4', VideoWriter_fourcc('M', 'J', 'P', 'G'), 10, (cap.get(3) >> 1, cap.get(4)))
+fourcc = cv2.VideoWriter_fourcc(*'MP4V')
+out = cv2.VideoWriter(args['output'], fourcc, 30.0, (img_shape[0]*2, img_shape[1]))
 
-border = zeros((10, cap.get(4), 3))
+trans = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Resize((img_shape[0], img_shape[1])),
+])
 
-for _ in tqdm(range(cap.get(7))):
+for _ in tqdm(range(int(cap.get(7)))):
     ret, frame = cap.read()
     if ret:
-        reconstruction = model(frame)
-        final_frame = hconcat([frame, border, reconstruction])
+        data = trans(Image.fromarray(frame.astype(np.uint8)))
+        data = data.to(device)
+        data = data.view((1, 3, img_shape[0], img_shape[1]))
+        reconstruction, _, _ = model(data)
+        reconstruction = np.uint8(reconstruction.cpu().detach().numpy() * 255).squeeze()
+        reconstruction = cv2.merge((reconstruction[2, :, :], reconstruction[1, :, :], reconstruction[0, :, :]))
+        frame = cv2.resize(frame, (img_shape[0], img_shape[1]))
+        final_frame = np.hstack([frame, reconstruction])
+        cv2.imshow("Frame", final_frame)
         out.write(final_frame)
+        key = cv2.waitKey(1) & 0xFF
+        if key == ord("q"):
+            break
     else:
         break
 

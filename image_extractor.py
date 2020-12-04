@@ -8,7 +8,7 @@ videos = f"{path}/data/videos"
 listdir = os.listdir(videos)
 
 # parameter
-interval = 2
+interval = 1
 
 for rep in listdir:
     cap = VideoCapture(videos+'/'+rep)
@@ -18,7 +18,7 @@ for rep in listdir:
         continue
 
     print(f"Extracting frames from video {rep}")
-    for i in tqdm(range(0, cap.get(7), interval)):
+    for i in tqdm(range(0, int(cap.get(7)), interval)):
         ret, frame = cap.read()
         if ret:
             imwrite(f"{images}/{int(i/interval)}.jpg", frame)

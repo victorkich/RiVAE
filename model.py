@@ -53,7 +53,7 @@ class RiVAE(nn.Module):
             nn.ConvTranspose2d(24, 12, kernel_size=5, stride=3, padding=1),
             nn.ReLU(inplace=True),
             nn.ConvTranspose2d(12, 3, kernel_size=2, stride=2, padding=1),
-            nn.Sigmoid()
+            nn.ReLU(inplace=True)
         )
 
     def reparameterize(self, mu, log_var):

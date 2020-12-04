@@ -35,7 +35,7 @@ model = model.RiVAE(latent_dim=latent_dim, batch_size=batch_size).to(device)
 optimizer = optim.Adam(model.parameters(), lr=lr)
 
 # Binary Cross Entropy loss
-criterion = nn.BCELoss(reduction='sum')
+criterion = nn.BCEWithLogitsLoss(reduction='sum')
 
 # loading the dataset using DataLoader
 dataset = RiVAEDataset(img_dir=img_path, img_shape=img_shape)
