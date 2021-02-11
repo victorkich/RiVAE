@@ -13,7 +13,7 @@ class RiVAEDataset(Dataset):
 
         self.trans = transforms.Compose([
             transforms.ToTensor(),
-            transforms.Resize((img_shape[0], img_shape[1])),
+            transforms.Resize((img_shape[2], img_shape[3]))
         ])
 
     def __repr__(self):

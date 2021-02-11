@@ -1,98 +1,92 @@
 from torch.utils.data import DataLoader, random_split
 from torchvision.utils import save_image
 from dataset_creator import RiVAEDataset
+from model import RiVAE
 from torch import optim
-from torch import nn
 from tqdm import tqdm
+from torch import nn
 import pandas as pd
+from os import path
 import torch
-import model
-import os
 
 # get image path
-path = os.path.abspath(os.path.dirname(__file__))
-img_path = f"{path}/data/images"
+path_ = path.abspath(path.dirname(__file__))
+img_path = f"{path_}/data/images"
 
 # parameters
-img_shape = [280, 280, 3]  # [h, w, c]
-latent_dim = 1587
-epochs = 1000
-batch_size = 1
-lr = 0.0001
+img_shape = (40, 3, 64, 64)  # (batch_size, c, w, h)
+epochs = 100
+lr = 0.0004
 checkpoint_interval = 10
 
 #  use gpu if available
-cuda_available = torch.cuda.is_available()
-device = torch.device('cuda' if cuda_available else 'cpu')
-print("PyTorch CUDA:", cuda_available)
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+print("PyTorch CUDA:", torch.cuda.is_available())
 
 # create a model from RiVAE auto encoder class
-# load it to the specified device, either gpu or cpu
-model = model.RiVAE(latent_dim=latent_dim, batch_size=batch_size).to(device)
+model = RiVAE().to(device)
 
-# create an optimizer object
-# Adam optimizer with learning rate 1e-4
+# Adam optimizer with learning rate 4e-4
 optimizer = optim.Adam(model.parameters(), lr=lr)
 
-# Binary Cross Entropy loss
-criterion = nn.BCEWithLogitsLoss(reduction='sum')
+# Mean Squared Error loss
+criterion = nn.MSELoss(reduction='sum')
 
 # loading the dataset using DataLoader
 dataset = RiVAEDataset(img_dir=img_path, img_shape=img_shape)
 lengths = [round(len(dataset)*0.8), round(len(dataset)*0.2)]
 train_data, val_data = random_split(dataset, lengths, generator=torch.Generator())
-train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=True)
-val_loader = DataLoader(val_data, batch_size=batch_size, shuffle=True)
+train_loader = DataLoader(train_data, batch_size=img_shape[0], shuffle=True)
+val_loader = DataLoader(val_data, batch_size=img_shape[0], shuffle=True)
 
 
-def kl_loss(mu, logvar):
+def kl_loss(mu, log_var):
     """
         KL-Divergence = 0.5 * sum(1 + log(sigma^2) - mu^2 - sigma^2)
-        :param mu: the mean from the latent vector
-        :param logvar: log variance from the latent vector
+        mu: the mean from the latent vector
+        log_var: log variance from the latent vector
     """
-    KLD = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
-    return KLD
+    kl_div = -0.5 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
+    return kl_div
 
 
-def fit(model, dataloader):
-    model.train()
+def fit(net, data_l):
+    net.train()
     running_loss = 0.0
-    for i, data in tqdm(enumerate(dataloader), total=int(len(train_data)/dataloader.batch_size)):
+    for data in tqdm(data_l, total=int(len(train_data)/data_l.batch_size)):
         data = data.to(device)
-        data = data.reshape((1, 3, data.shape[3], data.shape[2]))
+        data = data.reshape(img_shape)
         optimizer.zero_grad()
-        reconstruction, mu, logvar = model(data)
+        reconstruction, mu, log_var = net(data)
         criterion_loss = criterion(reconstruction, data)
-        kl_div = kl_loss(mu, logvar)
+        kl_div = kl_loss(mu, log_var)
         loss = criterion_loss + kl_div
         running_loss += loss.item()
         loss.backward()
         optimizer.step()
-    train_loss = running_loss/len(dataloader.dataset)
-    return train_loss
+    t_loss = running_loss / len(data_l.dataset)
+    return t_loss
 
 
-def validate(model, dataloader):
-    model.eval()
+def validate(net, data_l):
+    net.eval()
     running_loss = 0.0
     with torch.no_grad():
-        for i, data in tqdm(enumerate(dataloader), total=int(len(val_data) / dataloader.batch_size)):
+        for i, data in tqdm(enumerate(data_l), total=int(len(val_data)/data_l.batch_size)):
             data = data.to(device)
-            data = data.view((1, 3, data.shape[3], data.shape[2]))
-            reconstruction, mu, logvar = model(data)
+            data = data.view(img_shape)
+            reconstruction, mu, log_var = net(data)
             criterion_loss = criterion(reconstruction, data)
-            kl_div = kl_loss(mu, logvar)
+            kl_div = kl_loss(mu, log_var)
             loss = criterion_loss + kl_div
             running_loss += loss.item()
 
             # save the last batch input and output of every epoch
-            if i == int(len(val_data) / dataloader.batch_size) - 1:
-                both = torch.cat((data.view(batch_size, img_shape[2], img_shape[0], img_shape[1]),
-                                  reconstruction.view(batch_size, img_shape[2], img_shape[0], img_shape[1])))
+            if i == int(len(val_data)/data_l.batch_size) - 1:
+                both = torch.cat((data.view(img_shape), reconstruction.view(img_shape)))
                 save_image(both.cpu(), f"{path}/data/outputs/output_{epoch}.png")
-    val_loss = running_loss / len(dataloader.dataset)
-    return val_loss
+    v_loss = running_loss / len(data_l.dataset)
+    return v_loss
 
 
 train_loss = []

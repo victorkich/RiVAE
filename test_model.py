@@ -8,10 +8,8 @@ import model
 import cv2
 import os
 
-
 # Parameters
-latent_dim = 1587
-img_shape = [280, 280, 3]
+img_shape = (1, 3, 512, 512)
 
 path = os.path.abspath(os.path.dirname(__file__))
 
@@ -36,17 +34,17 @@ device = device('cuda' if cuda_available else 'cpu')
 print("PyTorch CUDA:", cuda_available)
 
 # Load model
-model = model.RiVAE(latent_dim=latent_dim).to(device)
+model = model.RiVAE().to(device)
 model.load_state_dict(load(path_model))
 model.eval()
 
 # Define the codec and create VideoWriter object.The output is stored in 'test_model.mp4' file.
 fourcc = cv2.VideoWriter_fourcc(*'MP4V')
-out = cv2.VideoWriter(args['output'], fourcc, 30.0, (img_shape[0]*2, img_shape[1]))
+out = cv2.VideoWriter(args['output'], fourcc, 30.0, (img_shape[3]*2, img_shape[2]))
 
 trans = transforms.Compose([
         transforms.ToTensor(),
-        transforms.Resize((img_shape[0], img_shape[1])),
+        transforms.Resize((img_shape[2], img_shape[3]))
 ])
 
 for _ in tqdm(range(int(cap.get(7)))):
@@ -54,11 +52,11 @@ for _ in tqdm(range(int(cap.get(7)))):
     if ret:
         data = trans(Image.fromarray(frame.astype(np.uint8)))
         data = data.to(device)
-        data = data.view((1, 3, img_shape[0], img_shape[1]))
+        data = data.view(img_shape)
         reconstruction, _, _ = model(data)
         reconstruction = np.uint8(reconstruction.cpu().detach().numpy() * 255).squeeze()
         reconstruction = cv2.merge((reconstruction[2, :, :], reconstruction[1, :, :], reconstruction[0, :, :]))
-        frame = cv2.resize(frame, (img_shape[0], img_shape[1]))
+        frame = cv2.resize(frame, (img_shape[2], img_shape[3]))
         final_frame = np.hstack([frame, reconstruction])
         cv2.imshow("Frame", final_frame)
         out.write(final_frame)
